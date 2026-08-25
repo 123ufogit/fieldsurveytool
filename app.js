@@ -284,6 +284,7 @@ fetch('zoning.geojson')
     });
 
     zoningLayerGroup.addLayer(zoningGeoJSON);
+    zoningGeoJSON.bringToBack();
     showToast(`📦 ゾーニング読み込み完了（${data.features
       ? data.features.length : '?'}件）`);
   })
