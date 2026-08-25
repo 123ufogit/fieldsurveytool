@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <!--
+    =====================================================================
+    石川県林業試験場 現地調査用 WebGIS アプリ
+    =====================================================================
+    用途   : 現地調査（GPS追尾・トラック記録・POI登録・GeoJSON出力）
+    動作環境: Android Chrome / Edge
+    使用ライブラリ: Leaflet 1.9.4（CDN）
+    =====================================================================
+  -->
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0,
+             maximum-scale=1.0, user-scalable=no" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#1a5c2a" />
+  <title>林業試験場 現地調査</title>
+
+  <!-- Leaflet CSS（CDN） -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+
+  <!-- アプリ CSS -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+  <!-- 地図コンテナ -->
+  <div id="map"></div>
+
+  <!-- =====================================================================
+       上部情報バー：緯度・経度・ズーム・方位
+       ===================================================================== -->
+  <div id="info-bar">
+    <div class="info-item">
+      <span class="info-label">緯度</span>
+      <span class="info-value" id="disp-lat">---.------</span>
+    </div>
+    <div class="info-item">
+      <span class="info-label">経度</span>
+      <span class="info-value" id="disp-lng">---.------</span>
+    </div>
+    <div class="info-item">
+      <span class="info-label">ZOOM</span>
+      <span class="info-value" id="disp-zoom">--</span>
+    </div>
+    <div class="info-item">
+      <span class="info-label">方位</span>
+      <span class="info-value" id="disp-bearing">
+        <span id="compass-display">🧭</span>
+        <span id="compass-deg">---°</span>
+      </span>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       フローティングアクションボタン群（右側縦並び）
+       ===================================================================== -->
+  <div id="fab-container">
+    <button class="fab" id="btn-locate"      title="現在地へ移動">📍</button>
+    <button class="fab" id="btn-follow"      title="GPS追尾">🔒</button>
+    <button class="fab" id="btn-track-start" title="トラック記録開始">⏺</button>
+    <button class="fab" id="btn-track-stop"  title="トラック記録停止" disabled>⏹</button>
+    <button class="fab" id="btn-poi"         title="POI登録">📌</button>
+    <button class="fab" id="btn-export"      title="GeoJSON出力">💾</button>
+    <button class="fab" id="btn-layers"      title="レイヤ設定">🗂</button>
+  </div>
+
+  <!-- =====================================================================
+       下部ステータスバー
+       ===================================================================== -->
+  <div id="status-bar">
+    <span id="status-text">待機中</span>
+    <span id="track-info">トラック: 0点</span>
+  </div>
+
+  <!-- =====================================================================
+       レイヤコントロールパネル（右スライドイン）
+       ===================================================================== -->
+  <div id="panel-overlay"></div>
+
+  <div id="layer-panel">
+    <div id="layer-panel-header">
+      <span>🗂 レイヤ設定</span>
+      <button id="btn-close-panel">✕</button>
+    </div>
+
+    <!-- ベースマップ -->
+    <div class="layer-section">
+      <div class="layer-section-title">ベースマップ</div>
+      <div class="layer-row">
+        <span class="layer-label">🗾 国土地理院 標準地図</span>
+        <span style="color:#666;font-size:11px;">常時表示</span>
+      </div>
+    </div>
+
+    <!-- GeoJSONデータ -->
+    <div class="layer-section">
+      <div class="layer-section-title">GeoJSONデータ</div>
+
+      <!-- 樹木データ -->
+      <div class="layer-row">
+        <input type="checkbox" class="layer-toggle" id="toggle-trees" checked />
+        <label class="layer-label" for="toggle-trees">🌳 樹木データ</label>
+      </div>
+      <div class="opacity-row">
+        <span class="opacity-label">透過率</span>
+        <input type="range" class="opacity-slider" id="slider-trees"
+               min="0" max="100" value="0" />
+        <span class="opacity-value" id="val-trees">0%</span>
+      </div>
+      <!-- 樹種凡例（折りたたみ） -->
+      <div class="layer-row" style="margin-top:-4px;">
+        <button id="btn-legend-toggle"
+          style="background:none;border:1px solid #555;color:#aaa;
+                 font-size:11px;padding:3px 10px;border-radius:4px;
+                 cursor:pointer;touch-action:manipulation;">
+          ▼ 樹種別の色
+        </button>
+      </div>
+      <div id="legend-trees"><!-- JS で動的生成 --></div>
+
+      <!-- ゾーニング -->
+      <div class="layer-row">
+        <input type="checkbox" class="layer-toggle" id="toggle-zoning" checked />
+        <label class="layer-label" for="toggle-zoning">📦 ゾーニング</label>
+      </div>
+      <div class="opacity-row">
+        <span class="opacity-label">透過率</span>
+        <input type="range" class="opacity-slider" id="slider-zoning"
+               min="0" max="100" value="50" />
+        <span class="opacity-value" id="val-zoning">50%</span>
+      </div>
+
+      <!-- 調査点 -->
+      <div class="layer-row">
+        <input type="checkbox" class="layer-toggle" id="toggle-codrat" checked />
+        <label class="layer-label" for="toggle-codrat">📍 調査点</label>
+      </div>
+    </div>
+
+    <!-- オーバーレイ -->
+    <div class="layer-section">
+      <div class="layer-section-title">オーバーレイ</div>
+
+      <!-- CS立体図 -->
+      <div class="layer-row">
+        <input type="checkbox" class="layer-toggle" id="toggle-cs" checked />
+        <label class="layer-label" for="toggle-cs">🏔 CS立体図（能登半島地震後）</label>
+      </div>
+      <div class="opacity-row">
+        <span class="opacity-label">透過率</span>
+        <input type="range" class="opacity-slider" id="slider-cs"
+               min="0" max="100" value="50" />
+        <span class="opacity-value" id="val-cs">50%</span>
+      </div>
+
+      <!-- 森林資源20mメッシュ -->
+      <div class="layer-row">
+        <input type="checkbox" class="layer-toggle" id="toggle-fr" />
+        <label class="layer-label" for="toggle-fr">🌲 森林資源20mメッシュ</label>
+      </div>
+      <div class="opacity-row">
+        <span class="opacity-label">透過率</span>
+        <input type="range" class="opacity-slider" id="slider-fr"
+               min="0" max="100" value="70" />
+        <span class="opacity-value" id="val-fr">70%</span>
+      </div>
+    </div>
+
+    <!-- フィールドデータ -->
+    <div class="layer-section">
+      <div class="layer-section-title">フィールドデータ</div>
+      <div class="layer-row">
+        <input type="checkbox" class="layer-toggle" id="toggle-track" checked />
+        <label class="layer-label" for="toggle-track">🛤 トラック</label>
+      </div>
+      <div class="layer-row">
+        <input type="checkbox" class="layer-toggle" id="toggle-poi" checked />
+        <label class="layer-label" for="toggle-poi">📌 POI</label>
+      </div>
+    </div>
+
+    <!-- データ操作 -->
+    <div class="layer-section">
+      <div class="layer-section-title">データ操作</div>
+      <button id="btn-clear-track"
+        style="width:100%;padding:12px;background:#5d1a1a;color:#ffaaaa;
+               border:1px solid #8b2020;border-radius:6px;font-size:13px;
+               cursor:pointer;margin-bottom:8px;touch-action:manipulation;">
+        🗑 トラックをクリア
+      </button>
+      <button id="btn-clear-poi"
+        style="width:100%;padding:12px;background:#1a3d5d;color:#aaccff;
+               border:1px solid #205080;border-radius:6px;font-size:13px;
+               cursor:pointer;touch-action:manipulation;">
+        🗑 POIをクリア
+      </button>
+    </div>
+
+    <!-- アプリ情報 -->
+    <div class="layer-section" style="border-bottom:none;">
+      <div class="layer-section-title">アプリ情報</div>
+      <div style="color:#666;font-size:11px;line-height:1.8;">
+        石川県林業試験場 現地調査用<br>
+        Leaflet 1.9.4 / 国土地理院タイル<br>
+        林野庁 CS立体図・森林資源メッシュ
+      </div>
+    </div>
+  </div>
+
+  <!-- =====================================================================
+       POI入力モーダル
+       ===================================================================== -->
+  <div id="poi-modal">
+    <div id="poi-modal-inner">
+      <h3>📌 POI登録</h3>
+      <label for="poi-name">名称</label>
+      <input type="text" id="poi-name"
+             placeholder="例：調査地点A" maxlength="50" />
+      <label for="poi-note">メモ</label>
+      <textarea id="poi-note"
+                placeholder="観察内容・特記事項など"></textarea>
+      <div id="poi-coords-display">座標取得中...</div>
+      <div class="modal-btn-row">
+        <button class="modal-btn" id="btn-poi-cancel">キャンセル</button>
+        <button class="modal-btn" id="btn-poi-ok">登録</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- トースト通知 -->
+  <div id="toast"></div>
+
+  <!-- =====================================================================
+       JavaScript 読み込み
+       Leaflet本体 → アプリJS の順で読み込む（依存関係のため）
+       ===================================================================== -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin="">
+  </script>
+  <script src="app.js"></script>
+
+</body>
+</html>
