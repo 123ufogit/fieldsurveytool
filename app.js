@@ -280,6 +280,10 @@ fetch('zoning.geojson')
         }
         layer.bindTooltip(lines.join('<br>'),
           { sticky: true, direction: 'top' });
+        layer.on('click', function (e) {
+          e.originalEvent.stopPropagation();
+        });
+        layer.interactive = false;
       },
     });
 
