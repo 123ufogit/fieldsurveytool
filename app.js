@@ -261,7 +261,7 @@ fetch('zoning.geojson')
         const color = getZoneColor(feature.properties || {});
         return {
           fillColor: color, color: color,
-          weight: 2, opacity: 0.9, fillOpacity: 0.85,
+          weight: 2, opacity: 0.9, fillOpacity: 0.15,
         };
       },
 
