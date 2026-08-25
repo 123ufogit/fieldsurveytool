@@ -124,6 +124,22 @@
         <input type="checkbox" class="layer-toggle" id="toggle-trees" checked />
         <label class="layer-label" for="toggle-trees">🌳 樹木データ</label>
       </div>
+      <div class="opacity-row">
+        <span class="opacity-label">透過率</span>
+        <input type="range" class="opacity-slider" id="slider-trees"
+               min="0" max="100" value="0" />
+        <span class="opacity-value" id="val-trees">0%</span>
+      </div>
+      <!-- 樹種凡例（折りたたみ） -->
+      <div class="layer-row" style="margin-top:-4px;">
+        <button id="btn-legend-toggle"
+          style="background:none;border:1px solid #555;color:#aaa;
+                 font-size:11px;padding:3px 10px;border-radius:4px;
+                 cursor:pointer;touch-action:manipulation;">
+          ▼ 樹種別の色
+        </button>
+      </div>
+      <div id="legend-trees"><!-- JS で動的生成 --></div>
 
       <!-- ゾーニング -->
       <div class="layer-row">
