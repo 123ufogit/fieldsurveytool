@@ -27,7 +27,7 @@ const map = L.map('map', {
   zoom:               INITIAL_ZOOM,
   zoomControl:        true,
   attributionControl: true,
-  maxZoom: 18,
+  maxZoom: 36,
   minZoom: 5,
 });
 
@@ -48,7 +48,7 @@ L.tileLayer(
     attribution:
       '<a href="https://maps.gsi.go.jp/development/ichiran.html"' +
       ' target="_blank">国土地理院</a>',
-    maxZoom: 18,
+    maxZoom: 36,
   }
 ).addTo(map);
 
@@ -59,7 +59,7 @@ const csLayer = L.tileLayer(
     attribution:
       '<a href="https://www.rinya.maff.go.jp/" target="_blank">' +
       '林野庁 CS立体図</a>',
-    maxZoom: 18,
+    maxZoom: 36,
     opacity: 0.5,
   }
 ).addTo(map);
@@ -71,7 +71,7 @@ const frLayer = L.tileLayer(
     attribution:
       '<a href="https://www.rinya.maff.go.jp/" target="_blank">' +
       '林野庁 森林資源メッシュ</a>',
-    maxZoom: 18,
+    maxZoom: 36,
     opacity: 0.3, // 透過率70% → opacity = (100-70)/100
   }
 ); // 初期非表示のため addTo しない
