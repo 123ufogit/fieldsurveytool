@@ -212,6 +212,7 @@ fetch('trees.geojson')
     });
 
     treesLayerGroup.addLayer(treesGeoJSON);
+    treesGeoJSON.bringToFront(); 
     buildTreesLegend();
     showToast(`🌳 樹木データ読み込み完了（${data.features
       ? data.features.length : '?'}件）`);
