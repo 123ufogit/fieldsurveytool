@@ -364,19 +364,6 @@ document.getElementById('toggle-trees')
       : map.removeLayer(treesLayerGroup);
   });
 
-/* 樹木データ 透過率スライダー */
-document.getElementById('slider-trees')
-  .addEventListener('input', function () {
-    const t = parseInt(this.value);
-    const fo = (100 - t) / 100;
-    document.getElementById('val-trees').textContent = `${t}%`;
-    if (treesGeoJSON) {
-      treesGeoJSON.eachLayer(layer => {
-        if (layer.setStyle) layer.setStyle({ fillOpacity: fo });
-      });
-    }
-  });
-
 /* ゾーニング ON/OFF */
 document.getElementById('toggle-zoning')
   .addEventListener('change', function () {
