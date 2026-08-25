@@ -518,6 +518,7 @@ const gpsState = {
   lastPosition:   null,
   currentMarker:  null,
   accuracyCircle: null,
+  lastHeading:    null, 
 };
 
 /* 現在地マーカーアイコン（青い丸） */
@@ -586,12 +587,71 @@ function onGpsError(err) {
 
 /** コンパス表示を更新する */
 function updateCompass(deg) {
+  gpsState.lastHeading = deg; // ★ 方位を保存
+
   const dirs = ['↑N','↗NE','→E','↘SE','↓S','↙SW','←W','↖NW'];
   document.getElementById('compass-display').textContent =
     dirs[Math.round(deg / 45) % 8];
   document.getElementById('compass-deg').textContent =
     `${Math.round(deg)}°`;
+  updateCrosshair(); // ★ 赤ライン更新
 }
+
+/** ズーム19以上＋特定方位で赤い縦横ラインを表示 */
+function updateCrosshair() {
+  const z = map.getZoom();
+  const deg = gpsState.lastHeading;
+
+  // 条件：ズーム19以上＋方位が指定範囲
+  if (z < 19 || deg === null || isNaN(deg)) {
+    if (crosshairLayer) {
+      map.removeLayer(crosshairLayer);
+      crosshairLayer = null;
+    }
+    return;
+  }
+
+  const d = (deg + 360) % 360;
+  const ok =
+    (d >= 358 || d <= 2) ||
+    (d >= 88 && d <= 92) ||
+    (d >= 178 && d <= 182) ||
+    (d >= 268 && d <= 272);
+
+  if (!ok) {
+    if (crosshairLayer) {
+      map.removeLayer(crosshairLayer);
+      crosshairLayer = null;
+    }
+    return;
+  }
+
+  const center = map.getCenter();
+  const bounds = map.getBounds();
+
+  const lat1 = bounds.getNorth();
+  const lat2 = bounds.getSouth();
+  const lng1 = bounds.getWest();
+  const lng2 = bounds.getEast();
+
+  const vertical = L.polyline([[lat1, center.lng], [lat2, center.lng]], {
+    color: '#ff0000',
+    weight: 2,
+    opacity: 0.9,
+  });
+
+  const horizontal = L.polyline([[center.lat, lng1], [center.lat, lng2]], {
+    color: '#ff0000',
+    weight: 2,
+    opacity: 0.9,
+  });
+
+  if (crosshairLayer) {
+    map.removeLayer(crosshairLayer);
+  }
+  crosshairLayer = L.layerGroup([vertical, horizontal]).addTo(map);
+}
+
 
 /* =========================================================================
    F. トラック記録
@@ -601,6 +661,7 @@ const trackState = { recording: false, pointCount: 0, startTime: null };
 let trackCoords   = [];
 const trackLayer  = L.layerGroup().addTo(map);
 let trackPolyline = null;
+let crosshairLayer = null;
 
 /** トラック記録を開始する */
 function startTracking() {
