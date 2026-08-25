@@ -442,6 +442,17 @@ document.getElementById('btn-legend-toggle')
     this.textContent = isOpen ? '▲ 樹種別の色' : '▼ 樹種別の色';
   });
 
+// ★ 新しい凡例パネルの開閉ボタン
+const legendToggleBtn = document.getElementById('legend-toggle-btn');
+const legendContent   = document.getElementById('legend-content');
+
+if (legendToggleBtn && legendContent) {
+  legendToggleBtn.addEventListener('click', () => {
+    const isOpen = legendContent.classList.toggle('show');
+    legendToggleBtn.textContent = isOpen ? '凡例 ▲' : '凡例 ▼';
+  });
+}
+
 /* =========================================================================
    E. GPS機能
    ========================================================================= */
