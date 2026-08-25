@@ -147,8 +147,8 @@ function getSpeciesColor(species) {
 
 /* 各レイヤを格納する LayerGroup */
 const treesLayerGroup  = L.layerGroup().addTo(map);
-const zoningLayerGroup = L.layerGroup().addTo(map);
 const codratLayerGroup = L.layerGroup().addTo(map);
+const zoningLayerGroup = L.layerGroup().addTo(map);
 
 /* GeoJSON レイヤの実体（透過率制御用に参照を保持） */
 let treesGeoJSON  = null;
@@ -261,7 +261,7 @@ fetch('zoning.geojson')
         const color = getZoneColor(feature.properties || {});
         return {
           fillColor: color, color: color,
-          weight: 2, opacity: 0.9, fillOpacity: 0.5,
+          weight: 2, opacity: 0.9, fillOpacity: 0.85,
         };
       },
 
