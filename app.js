@@ -289,6 +289,7 @@ fetch('zoning.geojson')
 
     zoningLayerGroup.addLayer(zoningGeoJSON);
     zoningGeoJSON.bringToBack();
+    buildZoningLegend(); 
     showToast(`📦 ゾーニング読み込み完了（${data.features
       ? data.features.length : '?'}件）`);
   })
@@ -409,7 +410,26 @@ document.getElementById('toggle-codrat')
 function buildTreesLegend() {
   const container = document.getElementById('legend-trees');
   container.innerHTML = '';
+   
+/** ゾーン凡例を動的生成（zoning.geojson 読み込み完了後に呼ぶ） */
+function buildZoningLegend() {
+  const container = document.getElementById('legend-zoning');
+  if (!container) return;
+  container.innerHTML = '';
 
+  // zoneColorCache に登録されたキーごとに凡例を作成
+  const keys = Object.keys(zoneColorCache).sort();
+  keys.forEach(key => {
+    const color = zoneColorCache[key];
+    const item = document.createElement('div');
+    item.className = 'legend-item';
+    item.innerHTML =
+      `<div class="legend-color"
+            style="background:${color};"></div>
+       <span>${key}</span>`;
+    container.appendChild(item);
+  });
+}
   // trees.geojson に登場した樹種のみを凡例に表示
   const sorted = [...detectedSpecies].sort();
 
