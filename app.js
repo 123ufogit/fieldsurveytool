@@ -157,6 +157,7 @@ const zoningLayerGroup = L.layerGroup().addTo(map);
 let treesGeoJSON  = null;
 let zoningGeoJSON = null;
 let codratGeoJSON = null;
+let mesh20Layer = null;
 
 /* 実データから検出した樹種リスト（凡例生成用） */
 const detectedSpecies = new Set();
@@ -356,6 +357,39 @@ fetch('codrat.geojson')
     console.warn('codrat.geojson 読み込み失敗:', err);
     showToast('⚠ codrat.geojson が見つかりません');
   });
+
+/* ------------------------------------------------------------------
+   C-4. 20m メッシュデータ（20mesh.geojson）
+   ------------------------------------------------------------------ */
+fetch('20mesh.geojson')
+  .then(res => {
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    return res.json();
+  })
+  .then(data => {
+    mesh20Layer = L.geoJSON(data, {
+      style: function (feature) {
+        return {
+          color: '#888888',
+          weight: 1,
+          opacity: 0.5
+        };
+      }
+    });
+
+    // 初期表示：ズーム19以上のときのみ
+    if (map.getZoom() >= 19) {
+      mesh20Layer.addTo(map);
+    }
+
+    showToast(`🧵 20mメッシュ読み込み完了（${data.features
+      ? data.features.length : '?'}件）`);
+  })
+  .catch(err => {
+    console.warn('20mesh.geojson 読み込み失敗:', err);
+    showToast('⚠ 20mesh.geojson が見つかりません');
+  });
+
 
 /* =========================================================================
    D. GeoJSONレイヤ 表示制御・透過率スライダー
@@ -885,9 +919,23 @@ map.on('move', function () {
 
 /* ズーム変更時：ズームレベル更新 */
 map.on('zoomend', function () {
-  document.getElementById('disp-zoom').textContent = map.getZoom();
+  const z = map.getZoom();
+  document.getElementById('disp-zoom').textContent = z;
+
+  // ★ 20mメッシュの表示制御
+  if (mesh20Layer) {
+    if (z >= 19) {
+      map.addLayer(mesh20Layer);
+    } else {
+      map.removeLayer(mesh20Layer);
+    }
+  }
+
+  // ★ 赤ラインの更新（後述の crosshair 用）
+  updateCrosshair();
 });
 document.getElementById('disp-zoom').textContent = map.getZoom();
+
 
 /* 地図ドラッグでGPS追尾OFF */
 map.on('dragstart', function () {
