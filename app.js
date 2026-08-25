@@ -99,6 +99,17 @@ const SPECIES_COLOR = {
   '未立木':   '#757575',
 };
 
+/* 自動生成カラー（SPECIES_COLOR にない樹種用） */
+const AUTO_COLORS = [
+  '#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00',
+  '#ffff33','#a65628','#f781bf','#999999'
+];
+
+/* 自動割り当て用キャッシュ */
+const autoColorMap = {};
+let autoColorIndex = 0;
+
+
 const DEFAULT_SPECIES_COLOR = '#9e9e9e';
 
 /**
@@ -108,12 +119,24 @@ const DEFAULT_SPECIES_COLOR = '#9e9e9e';
  */
 function getSpeciesColor(species) {
   if (!species) return DEFAULT_SPECIES_COLOR;
+
+  // 完全一致
   if (SPECIES_COLOR[species]) return SPECIES_COLOR[species];
+
+  // 部分一致（例：スギ（成木）など）
   for (const key of Object.keys(SPECIES_COLOR)) {
     if (species.includes(key)) return SPECIES_COLOR[key];
   }
-  return DEFAULT_SPECIES_COLOR;
+
+  // 自動色割り当て（trees.geojson に含まれるが SPECIES_COLOR にない樹種）
+  if (!autoColorMap[species]) {
+    autoColorMap[species] = AUTO_COLORS[autoColorIndex % AUTO_COLORS.length];
+    autoColorIndex++;
+  }
+
+  return autoColorMap[species];
 }
+
 
 /* =========================================================================
    C. GeoJSONレイヤ読み込み
@@ -391,10 +414,8 @@ function buildTreesLegend() {
   const container = document.getElementById('legend-trees');
   container.innerHTML = '';
 
-  const sorted = [
-    ...[...detectedSpecies].sort(),
-    ...Object.keys(SPECIES_COLOR).filter(s => !detectedSpecies.has(s)),
-  ];
+  // trees.geojson に登場した樹種のみを凡例に表示
+  const sorted = [...detectedSpecies].sort();
 
   sorted.forEach(sp => {
     const item = document.createElement('div');
@@ -402,12 +423,11 @@ function buildTreesLegend() {
     item.innerHTML =
       `<div class="legend-color"
             style="background:${getSpeciesColor(sp)};"></div>
-       <span>${sp}${detectedSpecies.has(sp) ? ''
-         : ' <span style="color:#555;font-size:10px;">(参考)</span>'
-       }</span>`;
+       <span>${sp}</span>`;
     container.appendChild(item);
   });
 
+  // その他（分類不能・未分類）
   const other = document.createElement('div');
   other.className = 'legend-item';
   other.innerHTML =
@@ -416,6 +436,7 @@ function buildTreesLegend() {
      <span>その他</span>`;
   container.appendChild(other);
 }
+
 
 /* 凡例の折りたたみ開閉 */
 document.getElementById('btn-legend-toggle')
