@@ -213,11 +213,6 @@ if (id !== undefined && id !== null) {
 }
 
 return marker;
-        return L.circleMarker(latlng, {
-          radius: getTreeRadius(feature.properties.DBH), fillColor: color,
-          color: '#ffffff', weight: 1.5,
-          opacity: 1, fillOpacity: 1.0,
-        });
       },
 
       /* ポリゴン・ライン：species で塗り色を変える */
@@ -229,21 +224,6 @@ return marker;
           fillColor: color, color: '#ffffff',
           weight: 1, fillOpacity: 0.75,
         };
-      },
-
-      /* ツールチップ：species + 他属性（最大3件） */
-      onEachFeature: function (feature, layer) {
-        const p  = feature.properties || {};
-        const sp = p.species || '不明';
-        const lines = [`<b>🌳 ${sp}</b>`];
-        let n = 0;
-        for (const [k, v] of Object.entries(p)) {
-          if (k === 'species') continue;
-          if (n++ >= 3) break;
-          lines.push(`${k}: ${v}`);
-        }
-        layer.bindTooltip(lines.join('<br>'),
-          { sticky: true, direction: 'top' });
       },
     });
 

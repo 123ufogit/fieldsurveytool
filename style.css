@@ -540,10 +540,17 @@ html, body {
 
 
 .tree-id-label {
-  background: rgba(0,0,0,0.75);
-  border: 1px solid #ffffff;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+
   color: #ffffff;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: bold;
-  padding: 2px 4px;
+
+  text-shadow:
+      1px 1px 2px #000,
+     -1px -1px 2px #000,
+      1px -1px 2px #000,
+     -1px 1px 2px #000;
 }
