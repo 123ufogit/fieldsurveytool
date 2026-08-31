@@ -230,7 +230,11 @@ const p = feature.properties || {};
 let html = '<div style="line-height:1.6;">';
 for (const [k, v] of Object.entries(p)) {
 if (v === null || v === '') continue;
-html += `<b>${k}</b> ： ${v}<br>`;
+if (k === "trees(in)_リンク") {
+  html += `<b>${k}</b> ： <a href="${v}" target="_blank" rel="noopener noreferrer" style="color:#0066cc;">Excel行を開く</a><br>`;
+} else {
+  html += `<b>${k}</b> ： ${v}<br>`;
+}
 }
 html += '</div>';
 layer.bindPopup(html);
