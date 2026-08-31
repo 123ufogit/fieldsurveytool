@@ -140,6 +140,17 @@ function getSpeciesColor(species) {
   return autoColorMap[species];
 }
 
+function getTreeRadius(dbh) {
+  dbh = Number(dbh) || 0;
+
+  return Math.max(
+    4,
+    Math.min(
+      18,
+      Math.sqrt(dbh) * 1.5
+    )
+  );
+}
 
 /* =========================================================================
    C. GeoJSONレイヤ読み込み
@@ -178,8 +189,32 @@ fetch('trees.geojson')
         const sp    = feature.properties && feature.properties.species;
         const color = getSpeciesColor(sp);
         if (sp) detectedSpecies.add(sp);
+        const marker = L.circleMarker(latlng, {
+  radius: getTreeRadius(feature.properties.DBH),
+  fillColor: color,
+  color: '#ffffff',
+  weight: 1.5,
+  opacity: 1,
+  fillOpacity: 1.0,
+});
+
+const id = feature.properties.ID;
+
+if (id !== undefined && id !== null) {
+  marker.bindTooltip(
+    String(id),
+    {
+      permanent: true,
+      direction: 'right',
+      offset: [8, 0],
+      className: 'tree-id-label'
+    }
+  );
+}
+
+return marker;
         return L.circleMarker(latlng, {
-          radius: 7, fillColor: color,
+          radius: getTreeRadius(feature.properties.DBH), fillColor: color,
           color: '#ffffff', weight: 1.5,
           opacity: 1, fillOpacity: 1.0,
         });
