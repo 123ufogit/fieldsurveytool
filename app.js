@@ -205,8 +205,7 @@ if (id !== undefined && id !== null) {
     String(id),
     {
       permanent: true,
-      direction: 'right',
-      offset: [8, 0],
+      direction: 'center',
       className: 'tree-id-label'
     }
   );
@@ -225,6 +224,18 @@ return marker;
           weight: 1, fillOpacity: 0.75,
         };
       },
+
+onEachFeature: function (feature, layer) {
+const p = feature.properties || {};
+let html = '<div style="line-height:1.6;">';
+for (const [k, v] of Object.entries(p)) {
+if (v === null || v === '') continue;
+html += `<b>${k}</b> ： ${v}<br>`;
+}
+html += '</div>';
+layer.bindPopup(html);
+},
+
     });
 
     treesLayerGroup.addLayer(treesGeoJSON);
